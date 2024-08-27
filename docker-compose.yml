@@ -1,0 +1,27 @@
+version: "3.9"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_HOST=host.docker.internal
+      - DB_PORT=5432
+      - DB_DATABASE=go_postgres
+      - DB_USER=user_go
+      - DB_PASSWORD=12345
+    command: http
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=user_go
+      - POSTGRES_PASSWORD=12345
+      - POSTGRES_DB=go_postgres
