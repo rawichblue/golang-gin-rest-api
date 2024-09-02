@@ -2,6 +2,7 @@ package employee
 
 import (
 	employeedto "app/modules/employee/dto"
+	"app/modules/response"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -17,7 +18,7 @@ func newController(employeeSvcService *EmployeeService) *EmployeeController {
 	}
 }
 
-func (c *EmployeeController) Create(ctx *gin.Context) {
+func (c *EmployeeController) CreateEmployee(ctx *gin.Context) {
 	req := employeedto.ReqCreateEmployee{}
 	if err := ctx.Bind(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -42,7 +43,7 @@ func (c *EmployeeController) Create(ctx *gin.Context) {
 	})
 }
 
-func (c *EmployeeController) Update(ctx *gin.Context) {
+func (c *EmployeeController) UpdateEmployee(ctx *gin.Context) {
 	id := employeedto.ReqGetEmployeeByID{}
 	if err := ctx.BindUri(&id); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -76,7 +77,7 @@ func (c *EmployeeController) Update(ctx *gin.Context) {
 	})
 }
 
-func (c *EmployeeController) Delete(ctx *gin.Context) {
+func (c *EmployeeController) DeleteEmployee(ctx *gin.Context) {
 	id := employeedto.ReqGetEmployeeByID{}
 	if err := ctx.BindUri(&id); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -101,7 +102,7 @@ func (c *EmployeeController) Delete(ctx *gin.Context) {
 	})
 }
 
-func (c *EmployeeController) Get(ctx *gin.Context) {
+func (c *EmployeeController) GetEmployeeById(ctx *gin.Context) {
 	id := employeedto.ReqGetEmployeeByID{}
 	if err := ctx.BindUri(&id); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -111,7 +112,7 @@ func (c *EmployeeController) Get(ctx *gin.Context) {
 		return
 	}
 
-	data, err := c.employeeSvc.Get(ctx, id)
+	data, err := c.employeeSvc.GetById(ctx, id)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"code":    http.StatusInternalServerError,
@@ -126,19 +127,43 @@ func (c *EmployeeController) Get(ctx *gin.Context) {
 	})
 }
 
-func (c *EmployeeController) List(ctx *gin.Context) {
+// GetEmployeeList handles the request for listing employees with pagination and search
+func (c *EmployeeController) GetEmployeeList(ctl *gin.Context) {
+	var req employeedto.ReqGetEmployeeList
 
-	data, err := c.employeeSvc.List(ctx)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"code":    http.StatusInternalServerError,
-			"message": err.Error(),
-		})
+	if err := ctl.ShouldBindQuery(&req); err != nil {
+		response.BadRequest(ctl, "Invalid request data")
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"code": http.StatusOK,
-		"data": data,
-	})
+	if req.Page <= 0 {
+		req.Page = 1
+	}
+	if req.Size <= 0 {
+		req.Size = 10
+	}
+
+	employees, paginate, err := c.employeeSvc.GetList(ctl.Request.Context(), req)
+	if err != nil {
+		response.InternalError(ctl, err.Error())
+		return
+	}
+
+	response.SuccessWithPaginate(ctl, employees, paginate)
 }
+
+// func (c *EmployeeController) GetEmployeeList(ctx *gin.Context) {
+// 	data, err := c.employeeSvc.GetList(ctx)
+// 	if err != nil {
+// 		ctx.JSON(http.StatusInternalServerError, gin.H{
+// 			"code":    http.StatusInternalServerError,
+// 			"message": err.Error(),
+// 		})
+// 		return
+// 	}
+
+// 	ctx.JSON(http.StatusOK, gin.H{
+// 		"code": http.StatusOK,
+// 		"data": data,
+// 	})
+// }

@@ -22,6 +22,7 @@ type Option struct {
 	TimeZone string
 }
 
+// Config DB with Bun
 func Database() *bun.DB {
 
 	db, err := defaultConfig()
@@ -33,6 +34,7 @@ func Database() *bun.DB {
 	return db
 }
 
+// Connect DB & Env
 func defaultConfig() (*bun.DB, error) {
 	port, _ := strconv.ParseInt(os.Getenv("DB_PORT"), 10, 64)
 
