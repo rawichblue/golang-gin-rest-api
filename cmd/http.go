@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Set Default Cobra Command & Gin
 var http = &cobra.Command{
 	Use:     "http",
 	Aliases: []string{"addition"},
@@ -22,6 +23,7 @@ var http = &cobra.Command{
 			})
 		})
 
+		// env
 		godotenv.Load()
 
 		mod := modules.Get()

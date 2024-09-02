@@ -16,6 +16,15 @@ func Api(r *gin.RouterGroup, mod *modules.Modules) {
 	protected := r.Group("/md")
 	protected.Use(middleware.CheckJwtAuth())
 
+	employee := protected.Group("/employee")
+	{
+		employee.POST("/create", mod.Employee.Ctl.CreateEmployee)
+		employee.PATCH("/:id", mod.Employee.Ctl.UpdateEmployee)
+		employee.DELETE("/:id", mod.Employee.Ctl.DeleteEmployee)
+		employee.GET("/:id", mod.Employee.Ctl.GetEmployeeById)
+		employee.GET("/list", mod.Employee.Ctl.GetEmployeeList)
+	}
+
 	product := protected.Group("/product")
 	{
 		product.POST("/create", mod.Product.Ctl.Create)
@@ -23,14 +32,5 @@ func Api(r *gin.RouterGroup, mod *modules.Modules) {
 		product.DELETE("/:id", mod.Product.Ctl.Delete)
 		product.GET("/:id", mod.Product.Ctl.Get)
 		product.GET("/list", mod.Product.Ctl.List)
-	}
-
-	employee := protected.Group("/employee")
-	{
-		employee.POST("/create", mod.Employee.Ctl.Create)
-		employee.PATCH("/:id", mod.Employee.Ctl.Update)
-		employee.DELETE("/:id", mod.Employee.Ctl.Delete)
-		employee.GET("/:id", mod.Employee.Ctl.Get)
-		employee.GET("/list", mod.Employee.Ctl.List)
 	}
 }

@@ -3,6 +3,7 @@ package employee
 import (
 	"app/models"
 	employeedto "app/modules/employee/dto"
+	"app/modules/response"
 	"context"
 	"errors"
 	"fmt"
@@ -115,7 +116,7 @@ func (s *EmployeeService) Delete(ctx context.Context, id employeedto.ReqGetEmplo
 	return nil, err
 }
 
-func (s *EmployeeService) Get(ctx context.Context, id employeedto.ReqGetEmployeeByID) (*models.Employee, error) {
+func (s *EmployeeService) GetById(ctx context.Context, id employeedto.ReqGetEmployeeByID) (*models.Employee, error) {
 
 	m := models.Employee{}
 
@@ -124,10 +125,112 @@ func (s *EmployeeService) Get(ctx context.Context, id employeedto.ReqGetEmployee
 	return &m, err
 }
 
-func (s *EmployeeService) List(ctx context.Context) ([]models.Employee, error) {
+func (s *EmployeeService) GetList(ctx context.Context, req employeedto.ReqGetEmployeeList) ([]employeedto.RespEmployee, response.Paginate, error) {
+	var employees []models.Employee
+	var respEmployees []employeedto.RespEmployee
 
-	m := []models.Employee{}
-	err := s.db.NewSelect().Model(&m).Scan(ctx)
+	query := s.db.NewSelect().Model(&employees).
+		Column("id", "user_id", "password", "name", "images", "role", "address", "phone").
+		Order("created_at ASC").
+		Limit(req.Size).
+		Offset((req.Page - 1) * req.Size)
 
-	return m, err
+	if req.Search != "" {
+		search := fmt.Sprintf("%%%s%%", req.Search)
+		query.Where("name ILIKE ? OR role ILIKE ? OR address ILIKE ?", search, search, search)
+	}
+
+	err := query.Scan(ctx)
+	if err != nil {
+		return nil, response.Paginate{}, err
+	}
+
+	for _, emp := range employees {
+		respEmp := employeedto.RespEmployee{
+			Id:      uint(emp.ID),
+			UserId:  emp.UserId,
+			Name:    emp.Name,
+			Images:  emp.Images,
+			Role:    emp.Role,
+			Address: emp.Address,
+			Phone:   emp.Phone,
+			// Password: emp.Password,
+		}
+		respEmployees = append(respEmployees, respEmp)
+	}
+
+	totalCount, err := s.db.NewSelect().Model((*models.Employee)(nil)).Count(ctx)
+	if err != nil {
+		return nil, response.Paginate{}, err
+	}
+
+	paginate := response.Paginate{
+		From:  int64((req.Page-1)*req.Size) + 1,
+		Size:  int64(req.Size),
+		Total: int64(totalCount),
+	}
+
+	return respEmployees, paginate, nil
 }
+
+// func (s *EmployeeService) GetListsss(ctx context.Context, req employeedto.ReqGetEmployeeList) ([]employeedto.RespEmployee, response.Paginate, error) {
+// 	var employees []models.Employee
+// 	var respEmployees []employeedto.RespEmployee
+
+// 	query := s.db.NewSelect().Model(&employees).
+// 		Column("id", "user_id", "password", "name", "images", "role", "address", "phone").
+// 		Order("created_at ASC").
+// 		Limit(req.Size).
+// 		Offset((req.Page - 1) * req.Size)
+
+// 	if req.Search != "" {
+// 		search := fmt.Sprintf("%%%s%%", req.Search)
+// 		query.Where("name ILIKE ? OR role ILIKE ? OR address ILIKE ?", search, search, search)
+// 	}
+
+// 	err := query.Scan(ctx)
+// 	if err != nil {
+// 		return nil, response.Paginate{}, err
+// 	}
+
+// 	for _, emp := range employees {
+// 		respEmp := employeedto.RespEmployee{
+// 			Id:       uint(emp.ID),
+// 			UserId:   emp.UserId,
+// 			Password: emp.Password,
+// 			Name:     emp.Name,
+// 			Images:   emp.Images,
+// 			Role:     emp.Role,
+// 			Address:  emp.Address,
+// 			Phone:    emp.Phone,
+// 		}
+// 		respEmployees = append(respEmployees, respEmp)
+// 	}
+
+// 	totalCount, err := s.db.NewSelect().Model((*models.Employee)(nil)).Count(ctx)
+// 	if err != nil {
+// 		return nil, Paginate{}, err
+// 	}
+
+// 	paginate := Paginate{
+// 		From:  int64((pagination.CurrentPage - 1) * pagination.PerPage),
+// 		Size:  int64(pagination.PerPage),
+// 		Total: int64(pagination.Total),
+// 	}
+// 	// pagination := response.Paginate{
+// 	// 	CurrentPage: req.Page,
+// 	// 	PerPage:     req.Size,
+// 	// 	TotalPages:  (totalCount + req.Size - 1) / req.Size,
+// 	// 	Total:       totalCount,
+// 	// }
+
+// 	return respEmployees, paginate, nil
+// }
+
+// func (s *EmployeeService) GetList(ctx context.Context) ([]models.Employee, error) {
+
+// 	m := []models.Employee{}
+// 	err := s.db.NewSelect().Model(&m).Scan(ctx)
+
+// 	return m, err
+// }

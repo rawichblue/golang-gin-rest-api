@@ -41,7 +41,7 @@ func (s *AuthService) Login(ctx context.Context, loginBody authdto.LoginBody) (*
 	hmacSampleSecret := []byte(os.Getenv("MY_SECRET_KEY"))
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"userId": employee.UserId,
-		"exp":    time.Now().Add(time.Minute * 1).Unix(), // Token expires in 1 minute
+		"exp":    time.Now().Add(time.Minute * 2).Unix(), // Token expires in 1 minute
 	})
 
 	tokenString, err := token.SignedString(hmacSampleSecret)

@@ -12,10 +12,12 @@ import (
 
 func CheckJwtAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// Check Header Authorization
 		header := c.Request.Header.Get("Authorization")
 		hmacSampleSecret := []byte(os.Getenv("MY_SECRET_KEY"))
 		tokenString := strings.Replace(header, "Bearer ", "", 1)
 
+		// JWT
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -23,6 +25,7 @@ func CheckJwtAuth() gin.HandlerFunc {
 			return hmacSampleSecret, nil
 		})
 
+		// Check Token
 		if err != nil || !token.Valid {
 			var message string
 			if err != nil {

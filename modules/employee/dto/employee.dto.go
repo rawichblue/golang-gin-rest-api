@@ -29,12 +29,25 @@ type ReqGetEmployeeByID struct {
 }
 
 type ReqGetEmployeeList struct {
-	Page     int    `form:"page"`
-	Size     int    `form:"size"`
-	SortBy   string `form:"sortBy"`
-	OrderBy  string `form:"orderBy"`
-	Search   string `form:"search"`
-	SearchBy string `form:"searchBy"`
+	Page   int    `form:"page"`
+	Size   int    `form:"size"`
+	Search string `form:"search"`
+}
+
+type ReqGetListEmployees struct {
+	Search string `form:"search" json:"search"`
+	Limit  int    `form:"limit" json:"limit" binding:"required"`
+	Page   int    `form:"page" json:"page" binding:"required"`
 }
 
 // Response
+type RespEmployee struct {
+	Id      uint   `json:"id"`
+	UserId  string `json:"userId"`
+	Name    string `json:"name"`
+	Images  string `json:"images"`
+	Role    string `json:"role"`
+	Address string `json:"address"`
+	Phone   int64  `json:"phone"`
+	// Password string `json:"password"`
+}
