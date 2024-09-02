@@ -2,7 +2,8 @@ package modules
 
 import (
 	"app/config"
-	"app/modules/customer"
+	"app/modules/auth"
+	"app/modules/employee"
 	"app/modules/product"
 
 	"github.com/uptrace/bun"
@@ -11,16 +12,17 @@ import (
 type Modules struct {
 	DB       *bun.DB
 	Product  *product.ProductModule
-	Customer *customer.CustomerModule
+	Employee *employee.ProductModule
+	Auth     *auth.AuthModule
 }
 
 func Get() *Modules {
-
 	db := config.Database()
 
 	return &Modules{
 		DB:       db,
 		Product:  product.New(db),
-		Customer: customer.New(db),
+		Employee: employee.New(db),
+		Auth:     auth.New(db),
 	}
 }
