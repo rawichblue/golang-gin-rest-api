@@ -2,16 +2,16 @@
 
 ## Overview
 
-This is a Go project that uses the Fiber framework and PostgreSQL for managing user data. It includes basic CRUD operations and is set up using Docker and Docker Compose. The project also integrates JWT authentication and password hashing for secure login functionality.
+ This project is a Go-based API development utilizing the Gin framework, Bun ORM, and JWT for secure authentication. It also integrates PostgreSQL for database management and Cobra for command-line functionality. The project demonstrates CRUD operations and other core features for managing user data efficiently.
 
 ## Features
 
 - Basic CRUD operations for users
-- JWT authentication with 1-minute token expiration
+- JWT Authentication Login
 - Password hashing and verification
 - Docker and Docker Compose setup
 - PostgreSQL database integration
-- Pagination and search functionality
+- Pagination and search 
 
 ## Project Structure
 
