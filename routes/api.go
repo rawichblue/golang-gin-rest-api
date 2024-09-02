@@ -1,13 +1,22 @@
 package routes
 
 import (
+	"app/cmd/middleware"
 	"app/modules"
 
 	"github.com/gin-gonic/gin"
 )
 
 func Api(r *gin.RouterGroup, mod *modules.Modules) {
-	product := r.Group("/product")
+	auth := r.Group("/auth")
+	{
+		auth.POST("/login", mod.Auth.Ctl.Login)
+	}
+
+	protected := r.Group("/md")
+	protected.Use(middleware.CheckJwtAuth())
+
+	product := protected.Group("/product")
 	{
 		product.POST("/create", mod.Product.Ctl.Create)
 		product.PATCH("/:id", mod.Product.Ctl.Update)
@@ -16,12 +25,12 @@ func Api(r *gin.RouterGroup, mod *modules.Modules) {
 		product.GET("/list", mod.Product.Ctl.List)
 	}
 
-	customer := r.Group("/customer")
+	employee := protected.Group("/employee")
 	{
-		customer.POST("/create", mod.Customer.Ctl.Create)
-		customer.PATCH("/:id", mod.Customer.Ctl.Update)
-		customer.DELETE("/:id", mod.Customer.Ctl.Delete)
-		customer.GET("/:id", mod.Customer.Ctl.GetById)
-		customer.GET("/list", mod.Customer.Ctl.GetList)
+		employee.POST("/create", mod.Employee.Ctl.Create)
+		employee.PATCH("/:id", mod.Employee.Ctl.Update)
+		employee.DELETE("/:id", mod.Employee.Ctl.Delete)
+		employee.GET("/:id", mod.Employee.Ctl.Get)
+		employee.GET("/list", mod.Employee.Ctl.List)
 	}
 }
