@@ -5,6 +5,7 @@ import (
 	"app/modules/auth"
 	"app/modules/employee"
 	"app/modules/product"
+	"app/modules/role"
 
 	"github.com/uptrace/bun"
 )
@@ -14,6 +15,7 @@ type Modules struct {
 	Product  *product.ProductModule
 	Employee *employee.ProductModule
 	Auth     *auth.AuthModule
+	Role     *role.RoleModule
 }
 
 func Get() *Modules {
@@ -24,5 +26,6 @@ func Get() *Modules {
 		Product:  product.New(db),
 		Employee: employee.New(db),
 		Auth:     auth.New(db),
+		Role:     role.New(db),
 	}
 }

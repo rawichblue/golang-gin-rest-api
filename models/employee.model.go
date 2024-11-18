@@ -12,7 +12,7 @@ type Employee struct {
 	Password string `json:"password"`
 	Name     string `json:"name"`
 	Images   string `json:"images"`
-	Role     string `json:"role"`
+	RoleId   int64  `json:"role_id"`
 	Address  string `json:"address"`
 	Phone    int64  `json:"phone"`
 	CreatedBy

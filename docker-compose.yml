@@ -10,18 +10,18 @@ services:
     environment:
       - DB_HOST=host.docker.internal
       - DB_PORT=5432
-      - DB_DATABASE=go_postgres
-      - DB_USER=user_go
-      - DB_PASSWORD=12345
+      - DB_DATABASE=postgres
+      - DB_USER=root
+      - DB_PASSWORD=secret
     command: http
-    depends_on:
-      - postgres
+    # depends_on:
+    #   - postgres
 
-  postgres:
-    image: postgres:latest
-    ports:
-      - "5432:5432"
-    environment:
-      - POSTGRES_USER=user_go
-      - POSTGRES_PASSWORD=12345
-      - POSTGRES_DB=go_postgres
+  # postgres:
+  #   image: postgres:latest
+  #   ports:
+  #     - "5432:5432"
+  #   environment:
+  #     - POSTGRES_USER=root
+  #     - POSTGRES_PASSWORD=secret
+  #     - POSTGRES_DB=postgres

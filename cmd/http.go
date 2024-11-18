@@ -27,7 +27,7 @@ var http = &cobra.Command{
 		godotenv.Load()
 
 		mod := modules.Get()
-		routes.Api(r.Group("/api"), mod)
+		routes.Router(r, mod)
 
 		r.Run(":8080")
 	},

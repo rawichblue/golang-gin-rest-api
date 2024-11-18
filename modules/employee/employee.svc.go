@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 
 	"golang.org/x/crypto/bcrypt"
 
@@ -55,7 +56,7 @@ func (s *EmployeeService) Create(ctx context.Context, req employeedto.ReqCreateE
 		Address:  req.Address,
 		Phone:    req.Phone,
 		Password: string(hashedPassword),
-		Role:     req.Role,
+		RoleId:   req.RoleId,
 	}
 
 	_, err = s.db.NewInsert().Model(&m).Exec(ctx)
@@ -81,7 +82,7 @@ func (s *EmployeeService) Update(ctx context.Context, id employeedto.ReqGetEmplo
 		UserId:   req.UserId,
 		Password: req.Password,
 		Name:     req.Name,
-		Role:     req.Role,
+		RoleId:   req.RoleId,
 		Images:   req.Images,
 		Address:  req.Address,
 		Phone:    req.Phone,
@@ -125,53 +126,100 @@ func (s *EmployeeService) GetById(ctx context.Context, id employeedto.ReqGetEmpl
 	return &m, err
 }
 
-func (s *EmployeeService) GetList(ctx context.Context, req employeedto.ReqGetEmployeeList) ([]employeedto.RespEmployee, response.Paginate, error) {
-	var employees []models.Employee
-	var respEmployees []employeedto.RespEmployee
+func (s *EmployeeService) GetList(ctx context.Context, req employeedto.ReqGetEmployeeList) ([]employeedto.RespEmployee, *response.Paginate, error) {
+	resp := []employeedto.RespEmployee{}
 
-	query := s.db.NewSelect().Model(&employees).
-		Column("id", "user_id", "password", "name", "images", "role", "address", "phone").
-		Order("created_at ASC").
-		Limit(req.Size).
-		Offset((req.Page - 1) * req.Size)
+	var offset int
+	if req.Page > 1 {
+		offset = (req.Page - 1) * req.Size
+	} else {
+		offset = 0
+	}
+
+	query := s.db.NewSelect().TableExpr("employees As em").
+		ColumnExpr("em.id ,em.user_id, em.name, em.images, em.address, em.phone").
+		ColumnExpr("r.name As role__name, r.id As role__id").
+		// ColumnExpr(`jsonb_build_object(
+		// 		'id', r.id,
+		// 		'name', r.name
+		// 	) AS role`).
+		Join("LEFT JOIN role As r On r.id = em.role_id")
 
 	if req.Search != "" {
 		search := fmt.Sprintf("%%%s%%", req.Search)
-		query.Where("name ILIKE ? OR role ILIKE ? OR address ILIKE ?", search, search, search)
+		query.Where("name ILIKE ? OR role_id ILIKE ? OR address ILIKE ?", search, search, search)
 	}
 
-	err := query.Scan(ctx)
+	Count, err := query.Count(ctx)
+
 	if err != nil {
-		return nil, response.Paginate{}, err
-	}
-
-	for _, emp := range employees {
-		respEmp := employeedto.RespEmployee{
-			Id:      uint(emp.ID),
-			UserId:  emp.UserId,
-			Name:    emp.Name,
-			Images:  emp.Images,
-			Role:    emp.Role,
-			Address: emp.Address,
-			Phone:   emp.Phone,
-			// Password: emp.Password,
-		}
-		respEmployees = append(respEmployees, respEmp)
-	}
-
-	totalCount, err := s.db.NewSelect().Model((*models.Employee)(nil)).Count(ctx)
-	if err != nil {
-		return nil, response.Paginate{}, err
+		return nil, nil, err
 	}
 
 	paginate := response.Paginate{
-		From:  int64((req.Page-1)*req.Size) + 1,
+		Page:  int64(req.Page),
 		Size:  int64(req.Size),
-		Total: int64(totalCount),
+		Total: int64(Count),
 	}
 
-	return respEmployees, paginate, nil
+	err = query.Order("em.created_at ASC").Limit(req.Size).Offset(offset).Scan(ctx, &resp)
+
+	log.Printf("data : %v", resp)
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return resp, &paginate, nil
 }
+
+// func (s *EmployeeService) GetList(ctx context.Context, req employeedto.ReqGetEmployeeList) ([]employeedto.RespEmployee, response.Paginate, error) {
+// 	var employees []models.Employee
+// 	var respEmployees []employeedto.RespEmployee
+
+// 	query := s.db.NewSelect().Model(&employees).
+// 		Column("id", "user_id", "password", "name", "images", "role_id", "address", "phone").
+// 		Order("created_at ASC").
+// 		Limit(req.Size).
+// 		Offset((req.Page - 1) * req.Size)
+
+// 	if req.Search != "" {
+// 		search := fmt.Sprintf("%%%s%%", req.Search)
+// 		query.Where("name ILIKE ? OR role_id ILIKE ? OR address ILIKE ?", search, search, search)
+// 	}
+
+// 	err := query.Scan(ctx)
+// 	if err != nil {
+// 		return nil, response.Paginate{}, err
+// 	}
+
+// 	for _, emp := range employees {
+// 		respEmp := employeedto.RespEmployee{
+// 			Id:      uint(emp.ID),
+// 			UserId:  emp.UserId,
+// 			Name:    emp.Name,
+// 			Images:  emp.Images,
+// 			RoleId:  emp.RoleId,
+// 			Address: emp.Address,
+// 			Phone:   emp.Phone,
+// 			// Password: emp.Password,
+// 		}
+// 		respEmployees = append(respEmployees, respEmp)
+// 	}
+
+// 	totalCount, err := s.db.NewSelect().Model((*models.Employee)(nil)).Count(ctx)
+// 	if err != nil {
+// 		return nil, response.Paginate{}, err
+// 	}
+
+// 	paginate := response.Paginate{
+// 		Page:  int64((req.Page-1)*req.Size) + 1,
+// 		Size:  int64(req.Size),
+// 		Total: int64(totalCount),
+// 	}
+
+// 	return respEmployees, paginate, nil
+// }
 
 // func (s *EmployeeService) GetListsss(ctx context.Context, req employeedto.ReqGetEmployeeList) ([]employeedto.RespEmployee, response.Paginate, error) {
 // 	var employees []models.Employee

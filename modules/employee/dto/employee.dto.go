@@ -1,27 +1,18 @@
 package employeedto
 
-import "app/models"
-
 // Request
 type ReqCreateEmployee struct {
 	UserId   string `json:"userId"`
 	Password string `json:"password" binding:"required"`
 	Name     string `json:"name" binding:"required"`
-	Role     string `json:"role" binding:"required"`
+	RoleId   int64  `json:"role_id" binding:"required"`
 	Images   string `json:"images"`
 	Address  string `json:"address"`
 	Phone    int64  `json:"phone"`
 }
 
 type ReqUpdateEmployee struct {
-	UserId   string `json:"userId"`
-	Password string `json:"password"`
-	Name     string `json:"name"`
-	Images   string `json:"images"`
-	Role     string `json:"role"`
-	Address  string `json:"address"`
-	Phone    int64  `json:"phone"`
-	models.UpdateUnixTimestamp
+	ReqCreateEmployee
 }
 
 type ReqGetEmployeeByID struct {
@@ -40,13 +31,18 @@ type ReqGetListEmployees struct {
 	Page   int    `form:"page" json:"page" binding:"required"`
 }
 
+type Role struct {
+	ID   int64  `json:"id"`
+	Name string `json:"Name"`
+}
+
 // Response
 type RespEmployee struct {
-	Id      uint   `json:"id"`
+	ID      int64  `json:"id"`
 	UserId  string `json:"userId"`
 	Name    string `json:"name"`
 	Images  string `json:"images"`
-	Role    string `json:"role"`
+	Role    Role   `json:"role"`
 	Address string `json:"address"`
 	Phone   int64  `json:"phone"`
 	// Password string `json:"password"`
