@@ -15,6 +15,9 @@ func Api(r *gin.RouterGroup, mod *modules.Modules) {
 	{
 		auth.GET("/getInfo", mod.Auth.Ctl.GetInfo)
 		auth.POST("/login", mod.Auth.Ctl.Login)
+		auth.GET("google/login", mod.Auth.Ctl.GoogleLogin)
+		auth.GET("google/callback", mod.Auth.Ctl.GoogleCallback)
+
 	}
 
 	protected := r.Group("/md")

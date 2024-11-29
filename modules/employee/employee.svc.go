@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"mime/multipart"
 
 	"golang.org/x/crypto/bcrypt"
 
@@ -24,7 +25,7 @@ func newService(db *bun.DB) *EmployeeService {
 	}
 }
 
-func (s *EmployeeService) Create(ctx context.Context, req employeedto.ReqCreateEmployee) (*models.Employee, error) {
+func (s *EmployeeService) Create(ctx context.Context, req employeedto.ReqCreateEmployee, image *multipart.FileHeader) (*models.Employee, error) {
 	var lastEmployee models.Employee
 	err := s.db.NewSelect().
 		Model(&lastEmployee).
@@ -50,9 +51,10 @@ func (s *EmployeeService) Create(ctx context.Context, req employeedto.ReqCreateE
 	}
 
 	m := models.Employee{
-		UserId:   userID,
-		Name:     req.Name,
-		Images:   req.Images,
+		UserId: userID,
+		Name:   req.Name,
+		Email:  req.Email,
+		// Images:   req.Images,
 		Address:  req.Address,
 		Phone:    req.Phone,
 		Password: string(hashedPassword),
@@ -80,12 +82,13 @@ func (s *EmployeeService) Update(ctx context.Context, id employeedto.ReqGetEmplo
 	m := models.Employee{
 		ID:       id.ID,
 		UserId:   req.UserId,
+		Email:    req.Email,
 		Password: req.Password,
 		Name:     req.Name,
 		RoleId:   req.RoleId,
-		Images:   req.Images,
-		Address:  req.Address,
-		Phone:    req.Phone,
+		// Images:   req.Images,
+		Address: req.Address,
+		Phone:   req.Phone,
 	}
 
 	_, err = s.db.NewUpdate().Model(&m).
@@ -137,7 +140,7 @@ func (s *EmployeeService) GetList(ctx context.Context, req employeedto.ReqGetEmp
 	}
 
 	query := s.db.NewSelect().TableExpr("employees As em").
-		ColumnExpr("em.id ,em.user_id, em.name, em.images, em.address, em.phone").
+		ColumnExpr("em.id ,em.user_id, em.email, em.name, em.images, em.address, em.phone").
 		ColumnExpr("r.name As role__name, r.id As role__id").
 		// ColumnExpr(`jsonb_build_object(
 		// 		'id', r.id,

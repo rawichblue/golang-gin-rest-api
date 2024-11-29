@@ -27,8 +27,9 @@ func (c *EmployeeController) CreateEmployee(ctx *gin.Context) {
 		})
 		return
 	}
+	image, _ := ctx.FormFile("image")
 
-	data, err := c.employeeSvc.Create(ctx, req)
+	data, err := c.employeeSvc.Create(ctx, req, image)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"code":    http.StatusInternalServerError,

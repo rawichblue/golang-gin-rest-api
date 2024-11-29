@@ -3,7 +3,11 @@ package auth
 import (
 	"app/helper"
 	authdto "app/modules/auth/dto"
+	"app/modules/google"
 	"app/modules/response"
+	"encoding/base64"
+	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
 
@@ -12,11 +16,13 @@ import (
 
 type AuthController struct {
 	authSvc *AuthService
+	google  *google.GoogleModule
 }
 
-func newController(authSvcService *AuthService) *AuthController {
+func newController(authSvcService *AuthService, google *google.GoogleModule) *AuthController {
 	return &AuthController{
 		authSvc: authSvcService,
+		google:  google,
 	}
 }
 
@@ -86,3 +92,85 @@ func (ctl *AuthController) GetInfo(c *gin.Context) {
 //      "data": user,
 //  })
 // }
+
+func (ctl *AuthController) GoogleLogin(c *gin.Context) {
+	req := authdto.GoogleAuthRequest{}
+	if err := c.Bind(&req); err != nil {
+		response.BadRequest(c, err)
+		return
+	}
+
+	state := encodeState("login", req.RedirectURL)
+	url := ctl.google.Svc.Oauth().AuthCodeURL(state)
+
+	c.Redirect(http.StatusFound, url)
+}
+
+func encodeState(prefix string, redirectURL string) string {
+
+	state := authdto.StateRequest{
+		Prefix:      prefix,
+		RedirectURL: redirectURL,
+	}
+
+	stateJSON, _ := json.Marshal(state)
+
+	return base64.URLEncoding.EncodeToString(stateJSON)
+}
+
+func (ctl *AuthController) GoogleCallback(ctx *gin.Context) {
+	code, stateReq, err := extractCodeAndState(ctx)
+	if err != nil {
+		response.BadRequest(ctx, err)
+		return
+
+	}
+
+	state, err := decodeState(stateReq)
+	if err != nil {
+		response.InternalError(ctx, err)
+		return
+	}
+
+	tokenAuth, err := ctl.google.Svc.Oauth().Exchange(ctx, code)
+	if err != nil {
+		response.InternalError(ctx, err)
+		return
+	}
+
+	authUser, err := ctl.authSvc.GetUser(ctx, tokenAuth.AccessToken)
+	if err != nil {
+		response.InternalError(ctx, err)
+		return
+	}
+
+	token, err := ctl.authSvc.ExistMail(ctx, authUser)
+	if err != nil {
+		response.InternalError(ctx, err)
+		return
+	}
+
+	// c.setTokenCookie(ctx, token, state.RedirectURL)
+	ctx.Redirect(http.StatusFound, state.RedirectURL+"?token="+token)
+}
+
+func extractCodeAndState(ctx *gin.Context) (string, string, error) {
+	code := ctx.Query("code")
+	state := ctx.Query("state")
+	if code == "" || state == "" {
+		return "", "", errors.New("unauthorized")
+	}
+	return code, state, nil
+}
+
+func decodeState(stateReq string) (*authdto.StateRequest, error) {
+	stateBytes, err := base64.URLEncoding.DecodeString(stateReq)
+	if err != nil {
+		return nil, err
+	}
+	var stateRequest authdto.StateRequest
+	if err := json.Unmarshal(stateBytes, &stateRequest); err != nil {
+		return nil, err
+	}
+	return &stateRequest, nil
+}

@@ -8,6 +8,7 @@ type Employee struct {
 	bun.BaseModel `bun:"table:employees"`
 
 	ID       int64  `bun:",type:serial,autoincrement,pk"`
+	Email    string `bun:"email,unique"`
 	UserId   string `json:"userId"`
 	Password string `json:"password"`
 	Name     string `json:"name"`

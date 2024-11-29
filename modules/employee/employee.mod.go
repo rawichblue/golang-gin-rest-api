@@ -1,6 +1,8 @@
 package employee
 
-import "github.com/uptrace/bun"
+import (
+	"github.com/uptrace/bun"
+)
 
 type ProductModule struct {
 	Ctl *EmployeeController
