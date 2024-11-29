@@ -34,14 +34,24 @@ func (s *AuthService) Login(ctx context.Context, loginBody authdto.LoginBody) (*
 		return nil, "", err
 	}
 
+	mapData := authdto.Details{
+		ID:      employee.ID,
+		UserId:  employee.UserId,
+		Name:    employee.Name,
+		Images:  employee.Images,
+		Address: employee.Address,
+		Phone:   employee.Phone,
+	}
+
 	if bcrypt.CompareHashAndPassword([]byte(employee.Password), []byte(loginBody.Password)) != nil {
 		return nil, "", errors.New("invalid credentials")
 	}
 
 	hmacSampleSecret := []byte(os.Getenv("MY_SECRET_KEY"))
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"userId": employee.UserId,
-		"exp":    time.Now().Add(time.Hour * 24).Unix(), // Token expires in 1 day
+		"userId": employee.ID,
+		"exp":    time.Now().Add(time.Hour * 24).Unix(),
+		"data":   mapData,
 	})
 
 	tokenString, err := token.SignedString(hmacSampleSecret)
@@ -50,4 +60,18 @@ func (s *AuthService) Login(ctx context.Context, loginBody authdto.LoginBody) (*
 	}
 
 	return &employee, tokenString, nil
+}
+
+func (s *AuthService) GetInfo(ctx context.Context, id int64) (*models.Employee, error) {
+	var employee models.Employee
+	err := s.db.NewSelect().
+		Model(&employee).
+		Where("id = ?", id).
+		Scan(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &employee, nil
 }

@@ -13,6 +13,7 @@ func Api(r *gin.RouterGroup, mod *modules.Modules) {
 
 	auth := r.Group("/auth")
 	{
+		auth.GET("/getInfo", mod.Auth.Ctl.GetInfo)
 		auth.POST("/login", mod.Auth.Ctl.Login)
 	}
 
