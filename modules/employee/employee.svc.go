@@ -1,6 +1,7 @@
 package employee
 
 import (
+	"app/helper"
 	"app/models"
 	employeedto "app/modules/employee/dto"
 	"app/modules/response"
@@ -44,6 +45,16 @@ func (s *EmployeeService) Create(ctx context.Context, req employeedto.ReqCreateE
 	}
 	userID := fmt.Sprintf("emp-%d", userIDNumber)
 
+	imagepath := ""
+
+	if image != nil {
+		url, err := helper.UploadAndResizeImage(ctx, image, "users")
+		if err != nil {
+			return nil, err
+		}
+		imagepath = url
+	}
+
 	// Hash the password
 	hashedPassword, hashErr := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if hashErr != nil {
@@ -51,10 +62,10 @@ func (s *EmployeeService) Create(ctx context.Context, req employeedto.ReqCreateE
 	}
 
 	m := models.Employee{
-		UserId: userID,
-		Name:   req.Name,
-		Email:  req.Email,
-		// Images:   req.Images,
+		UserId:   userID,
+		Name:     req.Name,
+		Email:    req.Email,
+		Images:   imagepath,
 		Address:  req.Address,
 		Phone:    req.Phone,
 		Password: string(hashedPassword),
