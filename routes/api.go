@@ -25,9 +25,9 @@ func Api(r *gin.RouterGroup, mod *modules.Modules) {
 
 	employee := r.Group("/employee")
 	{
-		employee.POST("/create", mod.Employee.Ctl.CreateEmployee)
-		employee.PATCH("/:id", mod.Employee.Ctl.UpdateEmployee)
-		employee.DELETE("/:id", mod.Employee.Ctl.DeleteEmployee)
+		employee.POST("/create", middleware.Permission(1), mod.Employee.Ctl.CreateEmployee)
+		employee.PATCH("/:id", middleware.Permission(2), mod.Employee.Ctl.UpdateEmployee)
+		employee.DELETE("/:id", middleware.Permission(3), mod.Employee.Ctl.DeleteEmployee)
 		employee.GET("/:id", mod.Employee.Ctl.GetEmployeeById)
 		employee.GET("/list", mod.Employee.Ctl.GetEmployeeList)
 	}
@@ -35,6 +35,9 @@ func Api(r *gin.RouterGroup, mod *modules.Modules) {
 	role := protected.Group("/role")
 	{
 		role.POST("/create", mod.Role.Ctl.CreateRole)
+		role.POST("/set-permission", mod.Role.Ctl.SetPermission)
+		role.GET("/get-permission/:id", mod.Role.Ctl.GetPermission)
+		role.DELETE("/:id", mod.Role.Ctl.DeleteRole)
 		// role.PATCH("/:id", mod.Role.Ctl.UpdateRole)
 		// role.DELETE("/:id", mod.Role.Ctl.DeleteRole)
 		// role.GET("/:id", mod.Role.Ctl.GetRoleById)
@@ -48,5 +51,12 @@ func Api(r *gin.RouterGroup, mod *modules.Modules) {
 		product.DELETE("/:id", mod.Product.Ctl.Delete)
 		product.GET("/:id", mod.Product.Ctl.Get)
 		product.GET("/list", mod.Product.Ctl.List)
+	}
+
+	permission := protected.Group("/permission")
+	{
+		permission.POST("/create", mod.Permission.Ctl.CreatePermission)
+		permission.GET("/list", mod.Permission.Ctl.PermissionList)
+		permission.PATCH("/:id", mod.Permission.Ctl.PermissionChangeStatus)
 	}
 }

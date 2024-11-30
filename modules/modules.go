@@ -5,6 +5,8 @@ import (
 	"app/modules/auth"
 	"app/modules/employee"
 	"app/modules/google"
+	"app/modules/permission"
+
 	"app/modules/product"
 	"app/modules/role"
 
@@ -12,11 +14,12 @@ import (
 )
 
 type Modules struct {
-	DB       *bun.DB
-	Product  *product.ProductModule
-	Employee *employee.ProductModule
-	Auth     *auth.AuthModule
-	Role     *role.RoleModule
+	DB         *bun.DB
+	Product    *product.ProductModule
+	Employee   *employee.ProductModule
+	Auth       *auth.AuthModule
+	Role       *role.RoleModule
+	Permission *permission.PermissionModule
 }
 
 func Get() *Modules {
@@ -24,10 +27,11 @@ func Get() *Modules {
 	google := google.New()
 
 	return &Modules{
-		DB:       db,
-		Product:  product.New(db),
-		Employee: employee.New(db),
-		Auth:     auth.New(db, google),
-		Role:     role.New(db),
+		DB:         db,
+		Product:    product.New(db),
+		Employee:   employee.New(db),
+		Auth:       auth.New(db, google),
+		Role:       role.New(db),
+		Permission: permission.New(db),
 	}
 }

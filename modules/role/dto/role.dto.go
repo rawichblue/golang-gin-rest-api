@@ -8,3 +8,15 @@ type ReqCreateRole struct {
 type ReqUpdateRole struct {
 	ReqCreateRole
 }
+
+type ReqSetPermission struct {
+	RoleId        int64   `json:"role_id"`
+	PermissionIds []int64 `json:"permission_ids"`
+}
+
+//	type ReqPermissionId struct {
+//		Id int64 `uri:"id"`
+//	}
+type ReqPermissionId struct {
+	Id int64 `uri:"id"`
+}
