@@ -49,13 +49,13 @@ func (ctl *PermissionController) PermissionList(c *gin.Context) {
 		req.Size = 10
 	}
 
-	employees, paginate, err := ctl.permissionSvc.PermissionList(c.Request.Context(), req)
+	permission, paginate, err := ctl.permissionSvc.PermissionList(c.Request.Context(), req)
 	if err != nil {
 		response.InternalError(c, err.Error())
 		return
 	}
 
-	response.SuccessWithPaginate(c, employees, paginate)
+	response.SuccessWithPaginate(c, permission, paginate)
 }
 
 func (ctl *PermissionController) PermissionChangeStatus(c *gin.Context) {
