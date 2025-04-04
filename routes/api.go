@@ -35,8 +35,10 @@ func Api(r *gin.RouterGroup, mod *modules.Modules) {
 	role := protected.Group("/role")
 	{
 		role.POST("/create", mod.Role.Ctl.CreateRole)
+		role.PATCH("toggle-status/:id", mod.Role.Ctl.RoleChangeStatus)
 		role.POST("/set-permission", mod.Role.Ctl.SetPermission)
 		role.GET("/get-permission/:id", mod.Role.Ctl.GetPermission)
+		role.GET("/list", mod.Role.Ctl.GetRoleList)
 		role.DELETE("/:id", mod.Role.Ctl.DeleteRole)
 		// role.PATCH("/:id", mod.Role.Ctl.UpdateRole)
 		// role.DELETE("/:id", mod.Role.Ctl.DeleteRole)

@@ -8,7 +8,7 @@ type Role struct {
 	ID          int64  `bun:",type:serial,autoincrement,pk"`
 	Name        string `bun:"name"`
 	Description string `bun:"description"`
-	IsActived   bool   `bun:"is_actived,default:false"`
+	IsActive    bool   `bun:"is_active"`
 	CreateUpdateUnixTimestamp
 	SoftDelete
 }

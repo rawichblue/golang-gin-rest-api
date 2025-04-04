@@ -2,9 +2,11 @@ package role
 
 import (
 	"app/models"
+	"app/modules/response"
 	roledto "app/modules/role/dto"
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/uptrace/bun"
 )
@@ -23,7 +25,7 @@ func (s *RoleService) Create(ctx context.Context, req roledto.ReqCreateRole) (*m
 	m := models.Role{
 		Name:        req.Name,
 		Description: req.Description,
-		IsActived:   req.IsActived,
+		IsActive:    req.IsActive,
 	}
 
 	_, err := s.db.NewInsert().Model(&m).Exec(ctx)
@@ -103,4 +105,77 @@ func (s *RoleService) DeleteRole(ctx context.Context, req roledto.ReqPermissionI
 	_, err = s.db.NewDelete().TableExpr("role").Where("id = ?", req.Id).Exec(ctx)
 
 	return err
+}
+
+func (s *RoleService) GetList(ctx context.Context, req roledto.ReqGetRoleList) ([]roledto.RespRoleLsit, *response.Paginate, error) {
+
+	var resp []models.Role
+
+	var offset int
+	if req.Page > 1 {
+		offset = (req.Page - 1) * req.Size
+	}
+
+	query := s.db.NewSelect().Model(&resp).
+		Column("id", "name", "description", "is_active").
+		Order("created_at ASC").
+		Limit(req.Size).
+		Offset(offset)
+
+	if req.Search != "" {
+		search := fmt.Sprintf("%%%s%%", req.Search)
+		query.Where("name ILIKE ? OR description ILIKE ?", search, search)
+	}
+
+	count, err := query.Count(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	paginate := response.Paginate{
+		Page:  int64(req.Page),
+		Size:  int64(req.Size),
+		Total: int64(count),
+	}
+
+	err = query.Scan(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var result []roledto.RespRoleLsit
+	for _, role := range resp {
+		result = append(result, roledto.RespRoleLsit{
+			ID:          role.ID,
+			Name:        role.Name,
+			Description: role.Description,
+			IsActive:    role.IsActive,
+		})
+	}
+
+	return result, &paginate, nil
+}
+
+func (s *RoleService) UpdateRole(ctx context.Context, id roledto.ReqRoleId, req roledto.ReqChangeStatus) (*models.Role, error) {
+	ex, err := s.db.NewSelect().Model((*models.Role)(nil)).Where("id = ?", id.ID).Exists(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if !ex {
+		return nil, errors.New("role not found")
+	}
+
+	m := models.Role{
+		ID:       id.ID,
+		IsActive: req.IsActive,
+	}
+
+	_, err = s.db.NewUpdate().Model(&m).
+		Set("is_active = ?is_active").
+		WherePK().
+		OmitZero().
+		Returning("*").
+		Exec(ctx)
+	return &m, err
 }

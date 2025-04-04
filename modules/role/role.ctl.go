@@ -26,7 +26,7 @@ func (c *RoleController) CreateRole(ctx *gin.Context) {
 	}
 
 	if req.Name == "" {
-		response.BadRequest(ctx, "ใส่ชื่อมาไอเวร")
+		response.BadRequest(ctx, "ทำไมไม่ส่งมาาา")
 		return
 	}
 
@@ -98,4 +98,57 @@ func (c *RoleController) DeleteRole(ctx *gin.Context) {
 	}
 
 	response.Success(ctx, nil)
+}
+
+func (c *RoleController) GetRoleList(ctl *gin.Context) {
+	var req roledto.ReqGetRoleList
+
+	if err := ctl.ShouldBindQuery(&req); err != nil {
+		response.BadRequest(ctl, "Invalid request data")
+		return
+	}
+
+	if req.Page <= 0 {
+		req.Page = 1
+	}
+	if req.Size <= 0 {
+		req.Size = 10
+	}
+
+	roles, paginate, err := c.roleSvc.GetList(ctl.Request.Context(), req)
+	if err != nil {
+		response.InternalError(ctl, err.Error())
+		return
+	}
+
+	response.SuccessWithPaginate(ctl, roles, paginate)
+}
+
+func (ctl *RoleController) RoleChangeStatus(c *gin.Context) {
+	id := roledto.ReqRoleId{}
+
+	if err := c.BindUri(&id); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code":    http.StatusBadRequest,
+			"message": err.Error(),
+		})
+		return
+	}
+
+	status := roledto.ReqChangeStatus{}
+	if err := c.Bind(&status); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code":    http.StatusBadRequest,
+			"message": err.Error(),
+		})
+		return
+	}
+
+	data, err := ctl.roleSvc.UpdateRole(c, id, status)
+	if err != nil {
+		response.InternalError(c, err.Error())
+		return
+	}
+
+	response.Success(c, data)
 }
