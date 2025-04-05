@@ -144,7 +144,36 @@ func (ctl *RoleController) RoleChangeStatus(c *gin.Context) {
 		return
 	}
 
-	data, err := ctl.roleSvc.UpdateRole(c, id, status)
+	data, err := ctl.roleSvc.toggleRole(c, id, status)
+	if err != nil {
+		response.InternalError(c, err.Error())
+		return
+	}
+
+	response.Success(c, data)
+}
+
+func (ctl *RoleController) Update(c *gin.Context) {
+	id := roledto.ReqRoleId{}
+
+	if err := c.BindUri(&id); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code":    http.StatusBadRequest,
+			"message": err.Error(),
+		})
+		return
+	}
+
+	status := roledto.ReqUpdateRole{}
+	if err := c.Bind(&status); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code":    http.StatusBadRequest,
+			"message": err.Error(),
+		})
+		return
+	}
+
+	data, err := ctl.roleSvc.Update(c, id, status)
 	if err != nil {
 		response.InternalError(c, err.Error())
 		return
