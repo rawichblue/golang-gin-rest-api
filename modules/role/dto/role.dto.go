@@ -22,9 +22,6 @@ type ReqSetPermission struct {
 	PermissionIds []int64 `json:"permission_ids"`
 }
 
-//	type ReqPermissionId struct {
-//		Id int64 `uri:"id"`
-//	}
 type ReqPermissionId struct {
 	Id int64 `uri:"id"`
 }

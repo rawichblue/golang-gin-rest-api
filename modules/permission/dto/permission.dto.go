@@ -1,9 +1,10 @@
 package permissiondto
 
 type ReqGetPermissionList struct {
-	Page   int    `form:"page"`
-	Size   int    `form:"size"`
-	Search string `form:"search"`
+	Page     int    `form:"page"`
+	Size     int    `form:"size"`
+	Search   string `form:"search"`
+	IsActive *bool  `form:"is_active"`
 }
 
 type ReqGetPermissionByID struct {

@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 
 	"github.com/uptrace/bun"
 )
@@ -31,22 +30,23 @@ func (s *PermissionService) CreatePermission(ctx context.Context, per []models.P
 func (s *PermissionService) PermissionList(ctx context.Context, req permissiondto.ReqGetPermissionList) ([]models.Permission, *response.Paginate, error) {
 	resp := []models.Permission{}
 
-	var offset int
+	offset := 0
 	if req.Page > 1 {
 		offset = (req.Page - 1) * req.Size
-	} else {
-		offset = 0
 	}
 
 	query := s.db.NewSelect().Model(&resp)
 
 	if req.Search != "" {
 		search := fmt.Sprintf("%%%s%%", req.Search)
-		query.Where("name ILIKE ? OR group ILIKE ? ", search, search)
+		query.Where("name ILIKE ? OR \"group\" ILIKE ?", search, search)
 	}
 
-	Count, err := query.Count(ctx)
+	if req.IsActive != nil {
+		query.Where("is_active = ?", *req.IsActive)
+	}
 
+	count, err := query.Count(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -54,13 +54,10 @@ func (s *PermissionService) PermissionList(ctx context.Context, req permissiondt
 	paginate := response.Paginate{
 		Page:  int64(req.Page),
 		Size:  int64(req.Size),
-		Total: int64(Count),
+		Total: int64(count),
 	}
 
 	err = query.Order("id ASC").Limit(req.Size).Offset(offset).Scan(ctx)
-
-	log.Printf("data : %v", resp)
-
 	if err != nil {
 		return nil, nil, err
 	}

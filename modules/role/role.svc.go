@@ -156,7 +156,7 @@ func (s *RoleService) GetList(ctx context.Context, req roledto.ReqGetRoleList) (
 	return result, &paginate, nil
 }
 
-func (s *RoleService) UpdateRole(ctx context.Context, id roledto.ReqRoleId, req roledto.ReqChangeStatus) (*models.Role, error) {
+func (s *RoleService) toggleRole(ctx context.Context, id roledto.ReqRoleId, req roledto.ReqChangeStatus) (*models.Role, error) {
 	ex, err := s.db.NewSelect().Model((*models.Role)(nil)).Where("id = ?", id.ID).Exists(ctx)
 	if err != nil {
 		return nil, err
@@ -177,5 +177,34 @@ func (s *RoleService) UpdateRole(ctx context.Context, id roledto.ReqRoleId, req 
 		OmitZero().
 		Returning("*").
 		Exec(ctx)
+	return &m, err
+}
+
+func (s *RoleService) Update(ctx context.Context, id roledto.ReqRoleId, req roledto.ReqUpdateRole) (*models.Role, error) {
+	ex, err := s.db.NewSelect().Model((*models.Role)(nil)).Where("id = ?", id.ID).Exists(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if !ex {
+		return nil, errors.New("role not found")
+	}
+
+	m := models.Role{
+		ID:          id.ID,
+		Name:        req.Name,
+		Description: req.Description,
+		IsActive:    req.IsActive,
+	}
+
+	_, err = s.db.NewUpdate().Model(&m).
+		Set("name = ?name").
+		Set("description = ?description").
+		Set("is_active = ?is_active").
+		WherePK().
+		OmitZero().
+		Returning("*").
+		Exec(ctx)
+
 	return &m, err
 }
